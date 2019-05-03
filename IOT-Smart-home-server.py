@@ -1,31 +1,17 @@
 #!/usr/bin/python3
 import paho.mqtt.client as mqtt
 import smtplib
+import kitchen
+from config import *
 
-SENSOR_KITCHEN_GAS = "sensor/kitchen/gas"
-SENSOR_BEDROOM_MOTION = "sensor/bedroom/motion"
-SENSOR_BEDROOM_LIGHT = "sensor/bedroom/light"
-SENSOR_LIVINGROOM_TEMPERATURE = "sensor/livingroom/temperature"
-
-CMD_KITCHEN_WINDOW = "cmd/kitchen/window"
-CMD_BEDROOM_BULB = "cmd/bedroom/bulb"
-CMD_LIVINGROOM_FAN = "cmd/living/room"
-
-WINDOW_OPEN = "open"
-WINDOW_CLOSE = "close"
-
-BULB_OPEN = "open"
-BULB_CLOSE = "close"
-
-FAN_OPEN = "open"
-FAN_CLOSE = "close"
-
-GAS_SENSOR_THRESHOLD = 100
+dark = False
+persons_in_bedroom = 0
 
 def on_message(client, userdata, message):
     topic = message.topic
     payload = str(message.payload.decode("utf-8"))
 
+    # Kitchen
     if (topic == SENSOR_KITCHEN_GAS):
         if (int(payload) > GAS_SENSOR_THRESHOLD):
             client.publish(CMD_KITCHEN_WINDOW, WINDOW_OPEN)
@@ -33,6 +19,20 @@ def on_message(client, userdata, message):
             sendmail(msg)
         if (int(payload) < GAS_SENSOR_THRESHOLD): client.publish(CMD_KITCHEN_WINDOW, WINDOW_CLOSE)
 
+    if (topic == REQ_KITCHEN_WINDOW):
+        client.publish(CMD_KITCHEN_WINDOW, payload)
+
+    # Bedroom
+    if (topic == SENSOR_BEDROOM_LIGHT):
+        dark = (int(payload) < LIGHT_SENSOR_THRESHOLD)
+        if (dark and persons_in_bedroom > 0): client.publish(CMD_BEDROOM_BULB, BULB_OPEN)
+        else: client.publish(CMD_BEDROOM_BULB, BULB_CLOSE)
+    
+    if (topic == SENSOR_BEDROOM_MOTION):
+        if (payload == MOTION_INWARD): persons_in_bedroom += 1
+        if (payload == MOTION_OUTWARD): persons_in_bedroom -= 1
+        if (dark and persons_in_bedroom > 0): client.publish(CMD_BEDROOM_BULB, BULB_OPEN)
+        else: client.publish(CMD_BEDROOM_BULB, BULB_CLOSE)
 
 client = mqtt.Client()
 def sendmail(msg):
