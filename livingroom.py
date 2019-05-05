@@ -1,4 +1,4 @@
-from config import *
+import config
 
 class Fan:
     def __init__(self, mqtt_client):
@@ -9,16 +9,15 @@ class Fan:
         return self.is_on
 
     def turnOn(self):
-        self.mqtt_client.publish(CMD_LIVINGROOM_FAN, FAN_OPEN)
+        self.mqtt_client.publish(config.CMD_LIVINGROOM_FAN, config.FAN_ON)
         self.is_on = True
     
     def turnOff(self):
-        self.mqtt_client.publish(CMD_LIVINGROOM_FAN, FAN_CLOSE)
+        self.mqtt_client.publish(config.CMD_LIVINGROOM_FAN, config.FAN_OFF)
         self.is_on = False
 
 class TemperatureSensor:
     def __init__(self):
-        self.mqtt_client = mqtt_client
         self.status_changed = False
         self.is_hot = False
 
@@ -30,13 +29,13 @@ class TemperatureSensor:
             return False
 
     def update(self, topic, payload):
-        if topic == SENSOR_LIVINGROOM_TEMPERATURE and int(payload) >= TEMPERATURE_SENSOR_THRESHOLD and self.is_hot == False:
+        if topic == config.SENSOR_LIVINGROOM_TEMPERATURE and int(payload) >= config.TEMPERATURE_SENSOR_THRESHOLD and self.is_hot == False:
             self.is_hot = True
-            self.statusChanged = True
+            self.status_changed = True
 
-        if topic == SENSOR_LIVINGROOM_TEMPERATURE and int(payload) < TEMPERATURE_SENSOR_THRESHOLD and self.is_hot:
+        if topic == config.SENSOR_LIVINGROOM_TEMPERATURE and int(payload) < config.TEMPERATURE_SENSOR_THRESHOLD and self.is_hot:
             self.is_hot = False
-            self.statusChanged = True
+            self.status_changed = True
     def isHot(self):
         return self.is_hot
 
@@ -51,3 +50,6 @@ class Livingroom:
         if self.temperature_sensor.statusChanged():
             if self.temperature_sensor.isHot() and not self.fan.isOn(): self.fan.turnOn()
             if not self.temperature_sensor.isHot() and self.fan.isOn(): self.fan.turnOff()
+
+        if topic == config.REQ_LIVINGROOM_FAN and payload == config.FAN_ON and not self.fan.isOn(): self.fan.turnOn()
+        if topic == config.REQ_LIVINGROOM_FAN and payload == config.FAN_OFF and self.fan.isOn(): self.fan.turnOff()

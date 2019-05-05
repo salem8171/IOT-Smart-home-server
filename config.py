@@ -1,3 +1,5 @@
+MQTT_SERVER = "localhost"
+
 SENSOR_KITCHEN_GAS = "sensor/kitchen/gas"
 SENSOR_BEDROOM_MOTION = "sensor/bedroom/motion"
 SENSOR_BEDROOM_LIGHT = "sensor/bedroom/light"
@@ -14,11 +16,11 @@ REQ_LIVINGROOM_FAN = "req/living/room"
 WINDOW_OPEN = "open"
 WINDOW_CLOSE = "close"
 
-BULB_OPEN = "open"
-BULB_CLOSE = "close"
+BULB_ON = "open"
+BULB_OFF = "close"
 
-FAN_OPEN = "open"
-FAN_CLOSE = "close"
+FAN_ON = "open"
+FAN_OFF = "close"
 
 MOTION_INWARD = "inward"
 MOTION_OUTWARD = "outward"
